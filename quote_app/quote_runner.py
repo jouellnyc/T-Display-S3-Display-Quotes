@@ -4,8 +4,10 @@ import s3lcd
 import random
 import hardware.tft_config as tft_config
 import vga1_bold_16x32 as big
-import machine
+
 from common import setup_file, quotes_dir
+import machine
+
 
 tft = tft_config.config(tft_config.WIDE)
 tft.init()
@@ -31,44 +33,23 @@ colors = [
     s3lcd.RED,
 ]
 
+all_random_colors = False
 
 BUTTON_PIN_1 = 0
 BUTTON_PIN_2 = 14
 button1 = machine.Pin(BUTTON_PIN_1, machine.Pin.IN, machine.Pin.PULL_UP)
 button2 = machine.Pin(BUTTON_PIN_2, machine.Pin.IN, machine.Pin.PULL_UP)
 
-all_random_colors = False
-colors = [  s3lcd.RED,
-            s3lcd.GREEN,
-            s3lcd.BLUE,
-            s3lcd.CYAN,
-            s3lcd.MAGENTA,
-            s3lcd.YELLOW,
-            s3lcd.WHITE,
-]
-
-
-
-def color_generator(color_list):
-    while True:
-        for one_color in color_list:
-            yield one_color
-
-def quote_type_generator(my_dispatch_table):
-    while True:
-        yield from my_dispatch_table  
-
-def check_button1():
-    """ value 1 is unpressed, 0 is pressed """
-    global foreground
-    if not button1.value():
-        foreground = next(my_colors)
-            
-def check_button2():
-    """ value 1 is unpressed, 0 is pressed """
+if not button1.value():
     if not button2.value():
-        set_quote_type()
-    
+        tft.text(font, "Upgrading...", 5 , 5, foreground, background)
+        tft.show()
+        import hardware.network_setup
+        import myugit
+        myugit.pull_all()
+        tft.text(font, "Upgrading...", 3 , 5, foreground, background)
+        tft.show()
+        
 def set_quote_type(dst_quote_type=None):
     
     if quote_type == 1:
@@ -84,6 +65,26 @@ def set_quote_type(dst_quote_type=None):
     machine.reset()
 
 
+def check_button1():
+    """ value 1 is unpressed, 0 is pressed """
+    global foreground
+    if not button1.value():
+        foreground = next(my_colors)
+            
+def check_button2():
+    """ value 1 is unpressed, 0 is pressed """
+    if not button2.value():
+        set_quote_type()
+
+def color_generator(color_list):
+    while True:
+        for one_color in color_list:
+            yield one_color
+
+def quote_type_generator(my_dispatch_table):
+    while True:
+        yield from my_dispatch_table  
+    
 def get_quote_type():
     with open(f"{quotes_dir}/quote_type.txt") as fh:
         quotes_content = fh.readline()
@@ -244,3 +245,4 @@ new_quote_type_gen = quote_type_generator(dispatch_table)
 """  Type comes out of the file as a str """
 quote_type = int(get_quote_type())
 one_ata_time()
+
