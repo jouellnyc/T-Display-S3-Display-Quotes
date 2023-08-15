@@ -18,6 +18,7 @@ if not file_or_dir_exists(setup_file):
     import setup
     import gc
     gc.collect()
+    import setup.setup
     import setup.microdot_runner
 else:
     import gc

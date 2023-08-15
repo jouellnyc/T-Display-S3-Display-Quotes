@@ -8,6 +8,7 @@ import machine
 import gc
 gc.collect()
 
+wifi_file='/hardware/wifi_config.py'
 
 from .microdot import Microdot
 app = Microdot()
@@ -20,9 +21,13 @@ index_page='''<!doctype html>
               
               <body>
               
-              Welcome to Setup for Quotes! <BR>
+              Welcome to Setup for Quotes!
               
-              Please Select the Quotes Group you want to see:
+              <BR>
+              <P>
+              <BR>
+            
+              Please Select Quotes you want to see:
               
               <P>
             
@@ -36,6 +41,23 @@ index_page='''<!doctype html>
               
               </select>
               
+              <P>
+              <br>
+              <P>
+              
+              Please enter your Wifi Name and password:
+             
+              <P>
+              <BR>
+              
+              
+              <br>
+              Wifi Name <input type="text" name="ssid" >
+              
+              <P>
+              
+              Password <input type="text" name="password" enctype="application/x-www-form-urlencoded">
+                            
               <br>
               <P>
               
@@ -89,6 +111,18 @@ def write_quote_file(quote_type, type_file=None):
     fh=open(type_file,'w')
     fh.write(f"QUOTE_TYPE={quote_type}\n")
     fh.close()
+
+def write_wifi_creds(ssid, pswd):
+    """ NOTE spaces in the SSID come over as spaces w/o any need to convert  """
+    try:
+        fh=open(wifi_file,'w')
+        fh.write(f"SSID='{ssid}'\n")
+        fh.write(f"PSWD='{pswd}'")
+        fh.close()
+    except Exception as e:
+        return f'Cannot open {wifi_file} {str(e)}'
+    else:
+        return 0
     
 @app.route('/')
 def index(request):
@@ -97,18 +131,37 @@ def index(request):
 @app.route('/setup/', methods=['POST'])
 def setup(req):
     if req.method == 'POST':
+        
         quote_type = int(req.form.get('quotes'))
+        
+        print(quote_type)
+        
         if quote_type:
+            
             try:
                 write_quote_file(quote_type,type_file=f"{quotes_dir}/quote_type.txt")
                 write_setup_file()
             except OSError as e:
                 print(e)
                 return '<HTML><TITLE>Error</TITLE>' + str(e) + '</HTML>', 200, {'Content-Type': 'text/html'}
+                
+            ssid     = req.form.get('ssid')
+            password = req.form.get('password')
+            print(ssid)
+            print(password)
+            
+            if ssid and password:
+                if write_wifi_creds(ssid, password) == 0:
+                    return setup_reply_page, 200, {'Content-Type': 'text/html'}
+                else:
+                    return '<HTML><TITLE>Password and SSID Write Error</TITLE></HTML>', 200, {'Content-Type': 'text/html'}
             else:
-                return setup_reply_page, 200, {'Content-Type': 'text/html'}
+                return 'Please send Password and SSID', 200, {'Content-Type': 'text/html'}
         else:
             return '<HTML><TITLE>Error: Select a Quote</TITLE>' + "Please Select a Quote" + '</HTML>', 200, {'Content-Type': 'text/html'}
+        
+        
+        
         
             
 @app.route('/reboot/', methods=['GET'])

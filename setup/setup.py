@@ -6,7 +6,7 @@ ap.config(essid=essid, password='')
 ap.active(True)
 ip_addr = ap.ifconfig()[0]
 
-import hardware.tft_config
+import hardware.tft_config as tft_config
 import vga1_bold_16x32 as big
 tft = tft_config.config(tft_config.WIDE)
 tft.init()
