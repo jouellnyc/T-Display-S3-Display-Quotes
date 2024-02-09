@@ -9,3 +9,4 @@ Display Scrolling Quotes on a LilyGo T-Display S3:
 <img src="quote.jpg" width="200"/>
 
 
+
